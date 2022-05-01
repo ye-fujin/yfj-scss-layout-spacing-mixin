@@ -1,0 +1,147 @@
+/**
+    Yet another SCSS layout spacing mixin to generate a list of atomic classes for margin/padding
+    
+    @description If you need to generate a list of atomic CSS classes like
+    - <div class"mx-10"></div> to have horizontal margins,
+    - <div class"my-10"></div> to have vertical margins,
+    - <div class"mxy-10"></div> to have both horizontal and vertical margins,
+    - <div class"m{t,r,b,l}-10"></div> to set top/right/bottom/left margins
+    in px (by default) or alternative units.
+    
+    All the same goes for padding.
+    
+    @example
+    // Example usage for margin:
+    $yfj-margin-map: (
+      'x': (
+        10
+      ),
+      'y': (
+        20
+      )
+    );
+    
+    @include yfj-layout-spacing-mapping('margin', $yfj-margin-map);
+    
+    // Example usage for padding:
+    $yfj-padding-map: (
+      'xy': (
+        10
+      ),
+      'top': (
+        20
+      ),
+      'right': (
+        20
+      ),
+      'bottom': (
+        20
+      ),
+      'left': (
+        20
+      )
+    );
+    
+    @include yfj-layout-spacing-mapping('padding', $yfj-padding-map);
+
+    // Example usage with alternative units:
+    $yfj-padding-map: (
+      'x': (
+        5
+      ),
+      'y': (
+        10
+      )
+    );
+    
+    @include yfj-layout-spacing-mapping('padding', $yfj-padding-map, '%');
+    
+    @version 1.0.0
+
+    @copyright Ye-Fujin, 2022
+    @license MIT
+*/
+
+@mixin yfj-layout-spacing($spacing, $direction, $value) {
+  #{$spacing}-#{$direction}: $value;
+}
+
+@mixin yfj-layout-spacing-x($spacing, $value) {
+  #{$spacing}-left: $value;
+  #{$spacing}-right: $value;
+}
+
+@mixin yfj-layout-spacing-y($spacing, $value) {
+  #{$spacing}-top: $value;
+  #{$spacing}-bottom: $value;
+}
+
+@mixin yfj-layout-spacing-xy($spacing, $value) {
+  #{$spacing}: $value;
+}
+
+@mixin yfj-layout-spacing-mapping(
+  $yjf-spacing,
+  $yfj-layout-spacing-map: (),
+  $yfj-layout-spacing-units: "px"
+) {
+  @if $yjf-spacing != "margin" and $yjf-spacing != "padding" {
+    @error "Spacing #{$yjf-spacing} must be either margin or padding.";
+  }
+
+  $yjf-spacing-class: if($yjf-spacing == "margin", "m", "p");
+
+  .#{$yjf-spacing-class} {
+    @each $yfj-layout-spacing-map-item,
+      $yfj-layout-spacing-map-item-value in $yfj-layout-spacing-map
+    {
+      $is-spacing-direction: $yfj-layout-spacing-map-item ==
+        "top" or
+        $yfj-layout-spacing-map-item ==
+        "right" or
+        $yfj-layout-spacing-map-item ==
+        "bottom" or
+        $yfj-layout-spacing-map-item ==
+        "left";
+
+      $yfj-property-name: if(
+        $is-spacing-direction,
+        str-slice($yfj-layout-spacing-map-item, 1, 1),
+        $yfj-layout-spacing-map-item
+      );
+
+      &#{$yfj-property-name} {
+        @each $yfj-layout-spacing-map-item-value-key
+          in $yfj-layout-spacing-map-item-value
+        {
+          &-#{$yfj-layout-spacing-map-item-value-key} {
+            $yfj-layout-spacing-value: #{$yfj-layout-spacing-map-item-value-key}#{$yfj-layout-spacing-units};
+
+            @if $yfj-layout-spacing-map-item == "xy" {
+              @include yfj-layout-spacing-xy(
+                $yjf-spacing,
+                $yfj-layout-spacing-value
+              );
+            } @else if $yfj-layout-spacing-map-item == "x" {
+              @include yfj-layout-spacing-x(
+                $yjf-spacing,
+                $yfj-layout-spacing-value
+              );
+            } @else if $yfj-layout-spacing-map-item == "y" {
+              @include yfj-layout-spacing-y(
+                $yjf-spacing,
+                $yfj-layout-spacing-value
+              );
+            } @else if $is-spacing-direction {
+              @include yfj-layout-spacing(
+                $yjf-spacing,
+                $yfj-layout-spacing-map-item,
+                $yfj-layout-spacing-value
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+}
